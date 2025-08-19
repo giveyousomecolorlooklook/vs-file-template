@@ -1,26 +1,57 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
+import { CommandHandler } from './commands/CommandHandler';
+import { StatusBarManager } from './ui/StatusBarManager';
+import { Configuration } from './config/Configuration';
+import { UIUtils } from './utils/UIUtils';
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
+let statusBarManager: StatusBarManager;
+
+/**
+ * 扩展激活时调用
+ */
 export function activate(context: vscode.ExtensionContext) {
+    console.log('文件模板插件已激活');
 
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "vs-file-template" is now active!');
+    // 注册所有命令
+    CommandHandler.registerCommands(context);
 
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with registerCommand
-	// The commandId parameter must match the command field in package.json
-	const disposable = vscode.commands.registerCommand('vs-file-template.helloWorld', () => {
-		// The code you place here will be executed every time your command is executed
-		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello World from vs-file-template!');
-	});
+    // 创建状态栏管理器
+    statusBarManager = new StatusBarManager();
+    context.subscriptions.push({
+        dispose: () => statusBarManager.dispose()
+    });
 
-	context.subscriptions.push(disposable);
+    // 检查模板路径配置
+    checkTemplateConfiguration();
+
+    UIUtils.showInfo('文件模板插件已启动');
 }
 
-// This method is called when your extension is deactivated
-export function deactivate() {}
+/**
+ * 扩展停用时调用
+ */
+export function deactivate() {
+    if (statusBarManager) {
+        statusBarManager.dispose();
+    }
+    console.log('文件模板插件已停用');
+}
+
+/**
+ * 检查模板配置
+ */
+function checkTemplateConfiguration(): void {
+    const templatePath = Configuration.getTemplatePath();
+    
+    if (!templatePath) {
+        UIUtils.showWarning('尚未配置模板路径，请先配置模板路径');
+        return;
+    }
+
+    if (!Configuration.validateTemplatePath(templatePath)) {
+        UIUtils.showWarning('配置的模板路径无效，请检查路径是否存在');
+        return;
+    }
+
+    console.log(`模板路径已配置: ${templatePath}`);
+}

@@ -1,9 +1,46 @@
-# Change Log
+# 变更日志
 
-All notable changes to the "vs-file-template" extension will be documented in this file.
+所有对此项目的重要更改都将记录在此文件中。
 
-Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
+格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/)，
+并且本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/spec/v2.0.0.html)。
 
-## [Unreleased]
+## [0.0.1] - 2025-08-20
 
-- Initial release
+### 新增
+- 实现了文件模板管理系统的核心功能
+- 添加了四个主要命令：
+  - `vs-file-template.insert`: 插入模板到当前编辑器
+  - `vs-file-template.import`: 批量导入模板到指定目录
+  - `vs-file-template.new`: 基于模板创建新文件
+  - `vs-file-template.btn`: 状态栏按钮管理入口
+- 实现了高内聚低耦合的代码架构：
+  - **配置层**: `Configuration` 类管理插件配置
+  - **工具层**: `FileSystemUtils` 和 `UIUtils` 提供通用工具
+  - **服务层**: `TemplateService` 实现核心业务逻辑
+  - **命令层**: `CommandHandler` 处理命令注册和执行
+  - **UI层**: `StatusBarManager` 管理状态栏组件
+- 添加了右键菜单集成：
+  - 编辑器右键菜单：插入模板
+  - 资源管理器右键菜单：导入模板、新建文件
+- 实现了状态栏按钮，提供快捷访问模板管理功能
+- 添加了完整的错误处理和用户提示
+- 支持模板路径配置和验证
+- 创建了详细的文档和使用说明
+
+### 技术特性
+- 使用 TypeScript 开发，提供类型安全
+- 模块化设计，易于维护和扩展
+- 异步操作支持，不阻塞 VS Code 界面
+- 完整的文件系统操作封装
+- 用户友好的交互界面
+
+### 文档
+- 添加了详细的 README.md 说明文档
+- 创建了模板目录结构示例
+- 提供了使用指南和配置说明
+- 包含了开发和部署信息
+
+### 测试
+- 添加了基础单元测试框架
+- 实现了配置、文件系统工具和命令注册的测试用例

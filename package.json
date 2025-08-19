@@ -17,12 +17,57 @@
   "activationEvents": [],
   "main": "./dist/extension.js",
   "contributes": {
+    "configuration": {
+      "title": "文件模板",
+      "properties": {
+        "vs-file-template.templatePath": {
+          "type": "string",
+          "default": "",
+          "description": "模板文件存放路径"
+        }
+      }
+    },
     "commands": [
       {
-        "command": "vs-file-template.helloWorld",
-        "title": "Hello World"
+        "command": "vs-file-template.insert",
+        "title": "插入模板",
+        "category": "文件模板"
+      },
+      {
+        "command": "vs-file-template.import",
+        "title": "导入模板",
+        "category": "文件模板"
+      },
+      {
+        "command": "vs-file-template.new",
+        "title": "从模板新建文件",
+        "category": "文件模板"
+      },
+      {
+        "command": "vs-file-template.btn",
+        "title": "文件模板管理",
+        "category": "文件模板"
       }
-    ]
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "vs-file-template.insert",
+          "group": "navigation@1",
+          "when": "editorTextFocus"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "vs-file-template.import",
+          "group": "navigation@1"
+        },
+        {
+          "command": "vs-file-template.new",
+          "group": "navigation@2"
+        }
+      ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run package",
