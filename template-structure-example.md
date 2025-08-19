@@ -131,13 +131,56 @@ const Component: React.FC<ComponentProps> = ({ title, onAction }) => {
 export default Component;
 ```
 
+## 导入功能说明
+
+当使用**导入模板**功能时，系统会递归复制选中模板目录的所有内容到目标位置，并**保留内部目录结构**。
+
+### 导入示例
+
+假设你选择导入 `react-component` 模板到项目的 `src/components/UserProfile/` 目录：
+
+**源目录结构** (`templates/import/react-component/`):
+```
+react-component/
+├── components/
+│   ├── UserCard.tsx
+│   └── UserList.tsx
+├── hooks/
+│   └── useUser.ts
+├── types/
+│   └── user.types.ts
+├── Component.tsx
+├── Component.test.tsx
+├── Component.module.css
+└── index.ts
+```
+
+**导入后的目标目录结构** (`src/components/UserProfile/`):
+```
+UserProfile/
+├── components/          # 保留了子目录结构
+│   ├── UserCard.tsx
+│   └── UserList.tsx
+├── hooks/               # 保留了子目录结构
+│   └── useUser.ts
+├── types/               # 保留了子目录结构
+│   └── user.types.ts
+├── Component.tsx        # 根级文件直接复制
+├── Component.test.tsx
+├── Component.module.css
+└── index.ts
+```
+
+**注意**: 只有 `react-component` 目录内部的内容被复制，`react-component` 目录本身不会被创建。
+
 ## 使用建议
 
 1. **模板变量**: 在模板中使用 `${n:placeholder}` 格式的占位符，方便快速替换
 2. **文件命名**: 使用有意义的文件名，便于识别模板用途
 3. **目录分类**: 按照技术栈、用途或项目类型分类组织模板
-4. **注释说明**: 在模板中添加适当的注释，说明使用方法和注意事项
-5. **定期更新**: 根据项目需求和技术发展，定期更新和维护模板文件
+4. **目录结构**: 在 `import` 模板中合理组织子目录，导入时会完整保留这些结构
+5. **注释说明**: 在模板中添加适当的注释，说明使用方法和注意事项
+6. **定期更新**: 根据项目需求和技术发展，定期更新和维护模板文件
 
 ## 配置步骤
 

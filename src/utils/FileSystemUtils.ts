@@ -168,6 +168,48 @@ export class FileSystemUtils {
     }
 
     /**
+     * 递归复制目录并保留内部目录结构（不包含根目录本身）
+     * @param sourceDir 源目录路径
+     * @param targetDir 目标目录路径
+     * @returns 是否复制成功
+     */
+    public static copyDirectoryWithStructure(sourceDir: string, targetDir: string): boolean {
+        try {
+            if (!this.directoryExists(sourceDir)) {
+                return false;
+            }
+
+            const items = fs.readdirSync(sourceDir);
+            
+            for (const item of items) {
+                const sourcePath = path.join(sourceDir, item);
+                const targetPath = path.join(targetDir, item);
+                const stat = fs.statSync(sourcePath);
+                
+                if (stat.isFile()) {
+                    // 复制文件
+                    if (!this.copyFile(sourcePath, targetPath)) {
+                        return false;
+                    }
+                } else if (stat.isDirectory()) {
+                    // 递归复制子目录
+                    if (!this.directoryExists(targetPath)) {
+                        fs.mkdirSync(targetPath, { recursive: true });
+                    }
+                    if (!this.copyDirectoryWithStructure(sourcePath, targetPath)) {
+                        return false;
+                    }
+                }
+            }
+            
+            return true;
+        } catch (error) {
+            console.error('复制目录失败:', error);
+            return false;
+        }
+    }
+
+    /**
      * 获取文件或目录的父目录
      */
     public static getParentDirectory(filePath: string): string {

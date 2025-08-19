@@ -116,12 +116,12 @@ export class TemplateService {
             return;
         }
 
-        // 执行导入操作
+        // 执行导入操作 - 保留内部目录结构
         const sourceDir = path.join(importDir, selectedDir);
-        const success = FileSystemUtils.copyFilesRecursively(sourceDir, targetPath);
+        const success = FileSystemUtils.copyDirectoryWithStructure(sourceDir, targetPath);
         
         if (success) {
-            UIUtils.showInfo(`已成功导入模板到: ${targetPath}`);
+            UIUtils.showInfo(`已成功导入模板到: ${targetPath}（保留目录结构）`);
         } else {
             UIUtils.showError('导入模板失败');
         }

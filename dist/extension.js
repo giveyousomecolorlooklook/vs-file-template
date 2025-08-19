@@ -273,11 +273,11 @@ class TemplateService {
         if (!selectedDir) {
             return;
         }
-        // 执行导入操作
+        // 执行导入操作 - 保留内部目录结构
         const sourceDir = path.join(importDir, selectedDir);
-        const success = FileSystemUtils_1.FileSystemUtils.copyFilesRecursively(sourceDir, targetPath);
+        const success = FileSystemUtils_1.FileSystemUtils.copyDirectoryWithStructure(sourceDir, targetPath);
         if (success) {
-            UIUtils_1.UIUtils.showInfo(`已成功导入模板到: ${targetPath}`);
+            UIUtils_1.UIUtils.showInfo(`已成功导入模板到: ${targetPath}（保留目录结构）`);
         }
         else {
             UIUtils_1.UIUtils.showError('导入模板失败');
@@ -681,6 +681,45 @@ class FileSystemUtils {
             return true;
         }
         catch {
+            return false;
+        }
+    }
+    /**
+     * 递归复制目录并保留内部目录结构（不包含根目录本身）
+     * @param sourceDir 源目录路径
+     * @param targetDir 目标目录路径
+     * @returns 是否复制成功
+     */
+    static copyDirectoryWithStructure(sourceDir, targetDir) {
+        try {
+            if (!this.directoryExists(sourceDir)) {
+                return false;
+            }
+            const items = fs.readdirSync(sourceDir);
+            for (const item of items) {
+                const sourcePath = path.join(sourceDir, item);
+                const targetPath = path.join(targetDir, item);
+                const stat = fs.statSync(sourcePath);
+                if (stat.isFile()) {
+                    // 复制文件
+                    if (!this.copyFile(sourcePath, targetPath)) {
+                        return false;
+                    }
+                }
+                else if (stat.isDirectory()) {
+                    // 递归复制子目录
+                    if (!this.directoryExists(targetPath)) {
+                        fs.mkdirSync(targetPath, { recursive: true });
+                    }
+                    if (!this.copyDirectoryWithStructure(sourcePath, targetPath)) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+        catch (error) {
+            console.error('复制目录失败:', error);
             return false;
         }
     }
