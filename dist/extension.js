@@ -1,8 +1,131 @@
 /******/ (() => { // webpackBootstrap
 /******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ([
-/* 0 */,
+/* 0 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.activate = activate;
+exports.deactivate = deactivate;
+const vscode = __importStar(__webpack_require__(1));
+const CommandHandler_1 = __webpack_require__(2);
+const StatusBarManager_1 = __webpack_require__(9);
+const Configuration_1 = __webpack_require__(5);
+const UIUtils_1 = __webpack_require__(8);
+let statusBarManager;
+/**
+ * 扩展激活时调用
+ */
+function activate(context) {
+    console.log('文件模板插件已激活');
+    // 注册所有命令
+    CommandHandler_1.CommandHandler.registerCommands(context);
+    // 创建状态栏管理器
+    statusBarManager = new StatusBarManager_1.StatusBarManager();
+    context.subscriptions.push({
+        dispose: () => statusBarManager.dispose()
+    });
+    // 注册配置变化监听器
+    const configChangeListener = vscode.workspace.onDidChangeConfiguration(event => {
+        if (event.affectsConfiguration('vs-file-template.templatePath')) {
+            handleTemplatePathChanged();
+        }
+    });
+    context.subscriptions.push(configChangeListener);
+    // 检查模板路径配置
+    checkTemplateConfiguration();
+    UIUtils_1.UIUtils.showInfo('文件模板插件已启动');
+}
+/**
+ * 扩展停用时调用
+ */
+function deactivate() {
+    if (statusBarManager) {
+        statusBarManager.dispose();
+    }
+    console.log('文件模板插件已停用');
+}
+/**
+ * 检查模板配置
+ */
+function checkTemplateConfiguration() {
+    const templatePath = Configuration_1.Configuration.getTemplatePath();
+    if (!templatePath) {
+        UIUtils_1.UIUtils.showWarning('尚未配置模板路径，请先配置模板路径');
+        return;
+    }
+    if (!Configuration_1.Configuration.validateTemplatePath(templatePath)) {
+        UIUtils_1.UIUtils.showWarning('配置的模板路径无效，请检查路径是否存在');
+        return;
+    }
+    // 确保必需的子目录存在
+    Configuration_1.Configuration.ensureTemplateSubDirectories();
+    console.log(`模板路径已配置: ${templatePath}`);
+}
+/**
+ * 处理模板路径配置变化
+ */
+function handleTemplatePathChanged() {
+    console.log('模板路径配置已变化，检查目录结构...');
+    const templatePath = Configuration_1.Configuration.getTemplatePath();
+    if (!templatePath) {
+        UIUtils_1.UIUtils.showWarning('模板路径已清空');
+        return;
+    }
+    if (!Configuration_1.Configuration.validateTemplatePath(templatePath)) {
+        UIUtils_1.UIUtils.showWarning('新配置的模板路径无效，请检查路径是否存在');
+        return;
+    }
+    // 检查并创建必需的子目录
+    const success = Configuration_1.Configuration.ensureTemplateSubDirectories();
+    if (success) {
+        console.log(`模板路径已更新: ${templatePath}`);
+    }
+}
+
+
+/***/ }),
 /* 1 */
+/***/ ((module) => {
+
+module.exports = require("vscode");
+
+/***/ }),
+/* 2 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -41,7 +164,7 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CommandHandler = void 0;
-const vscode = __importStar(__webpack_require__(2));
+const vscode = __importStar(__webpack_require__(1));
 const TemplateService_1 = __webpack_require__(3);
 const Configuration_1 = __webpack_require__(5);
 const UIUtils_1 = __webpack_require__(8);
@@ -137,12 +260,6 @@ exports.CommandHandler = CommandHandler;
 
 
 /***/ }),
-/* 2 */
-/***/ ((module) => {
-
-module.exports = require("vscode");
-
-/***/ }),
 /* 3 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
@@ -182,7 +299,7 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.TemplateService = void 0;
-const vscode = __importStar(__webpack_require__(2));
+const vscode = __importStar(__webpack_require__(1));
 const path = __importStar(__webpack_require__(4));
 const Configuration_1 = __webpack_require__(5);
 const FileSystemUtils_1 = __webpack_require__(7);
@@ -507,9 +624,11 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Configuration = void 0;
-const vscode = __importStar(__webpack_require__(2));
+const vscode = __importStar(__webpack_require__(1));
 const path = __importStar(__webpack_require__(4));
 const fs = __importStar(__webpack_require__(6));
+const FileSystemUtils_1 = __webpack_require__(7);
+const UIUtils_1 = __webpack_require__(8);
 /**
  * 配置管理类 - 负责管理插件的配置项
  */
@@ -558,6 +677,43 @@ class Configuration {
             insert: path.join(templatePath, 'insert'),
             new: path.join(templatePath, 'new')
         };
+    }
+    /**
+     * 检查并创建必需的模板子目录
+     */
+    static ensureTemplateSubDirectories() {
+        const templatePath = this.getTemplatePath();
+        if (!templatePath) {
+            return false;
+        }
+        // 如果模板根目录不存在，先创建它
+        if (!this.validateTemplatePath(templatePath)) {
+            if (!FileSystemUtils_1.FileSystemUtils.createDirectory(templatePath)) {
+                UIUtils_1.UIUtils.showError(`无法创建模板根目录: ${templatePath}`);
+                return false;
+            }
+        }
+        // 创建必需的子目录
+        const requiredDirs = ['import', 'insert', 'new'];
+        const createdDirs = [];
+        let allSuccess = true;
+        for (const dirName of requiredDirs) {
+            const dirPath = path.join(templatePath, dirName);
+            if (!FileSystemUtils_1.FileSystemUtils.directoryExists(dirPath)) {
+                if (FileSystemUtils_1.FileSystemUtils.createDirectory(dirPath)) {
+                    createdDirs.push(dirName);
+                }
+                else {
+                    UIUtils_1.UIUtils.showError(`无法创建目录: ${dirPath}`);
+                    allSuccess = false;
+                }
+            }
+        }
+        // 显示创建结果
+        if (createdDirs.length > 0) {
+            UIUtils_1.UIUtils.showInfo(`已自动创建模板目录: ${createdDirs.join(', ')}`);
+        }
+        return allSuccess;
     }
     /**
      * 打开设置页面
@@ -642,6 +798,21 @@ class FileSystemUtils {
             return stat.isFile();
         }
         catch {
+            return false;
+        }
+    }
+    /**
+     * 创建目录（如果不存在）
+     */
+    static createDirectory(dirPath) {
+        try {
+            if (!this.directoryExists(dirPath)) {
+                fs.mkdirSync(dirPath, { recursive: true });
+            }
+            return true;
+        }
+        catch (error) {
+            console.error(`创建目录失败: ${dirPath}`, error);
             return false;
         }
     }
@@ -866,7 +1037,7 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.UIUtils = void 0;
-const vscode = __importStar(__webpack_require__(2));
+const vscode = __importStar(__webpack_require__(1));
 /**
  * UI工具类 - 处理用户界面交互
  */
@@ -1018,7 +1189,7 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.StatusBarManager = void 0;
-const vscode = __importStar(__webpack_require__(2));
+const vscode = __importStar(__webpack_require__(1));
 /**
  * 状态栏管理器 - 管理状态栏按钮
  */
@@ -1087,63 +1258,13 @@ exports.StatusBarManager = StatusBarManager;
 /******/ 	}
 /******/ 	
 /************************************************************************/
-var __webpack_exports__ = {};
-// This entry needs to be wrapped in an IIFE because it needs to be isolated against other modules in the chunk.
-(() => {
-var exports = __webpack_exports__;
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.activate = activate;
-exports.deactivate = deactivate;
-const CommandHandler_1 = __webpack_require__(1);
-const StatusBarManager_1 = __webpack_require__(9);
-const Configuration_1 = __webpack_require__(5);
-const UIUtils_1 = __webpack_require__(8);
-let statusBarManager;
-/**
- * 扩展激活时调用
- */
-function activate(context) {
-    console.log('文件模板插件已激活');
-    // 注册所有命令
-    CommandHandler_1.CommandHandler.registerCommands(context);
-    // 创建状态栏管理器
-    statusBarManager = new StatusBarManager_1.StatusBarManager();
-    context.subscriptions.push({
-        dispose: () => statusBarManager.dispose()
-    });
-    // 检查模板路径配置
-    checkTemplateConfiguration();
-    UIUtils_1.UIUtils.showInfo('文件模板插件已启动');
-}
-/**
- * 扩展停用时调用
- */
-function deactivate() {
-    if (statusBarManager) {
-        statusBarManager.dispose();
-    }
-    console.log('文件模板插件已停用');
-}
-/**
- * 检查模板配置
- */
-function checkTemplateConfiguration() {
-    const templatePath = Configuration_1.Configuration.getTemplatePath();
-    if (!templatePath) {
-        UIUtils_1.UIUtils.showWarning('尚未配置模板路径，请先配置模板路径');
-        return;
-    }
-    if (!Configuration_1.Configuration.validateTemplatePath(templatePath)) {
-        UIUtils_1.UIUtils.showWarning('配置的模板路径无效，请检查路径是否存在');
-        return;
-    }
-    console.log(`模板路径已配置: ${templatePath}`);
-}
-
-})();
-
-module.exports = __webpack_exports__;
+/******/ 	
+/******/ 	// startup
+/******/ 	// Load entry module and return exports
+/******/ 	// This entry module is referenced by other modules so it can't be inlined
+/******/ 	var __webpack_exports__ = __webpack_require__(0);
+/******/ 	module.exports = __webpack_exports__;
+/******/ 	
 /******/ })()
 ;
 //# sourceMappingURL=extension.js.map

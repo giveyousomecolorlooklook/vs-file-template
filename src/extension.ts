@@ -21,6 +21,14 @@ export function activate(context: vscode.ExtensionContext) {
         dispose: () => statusBarManager.dispose()
     });
 
+    // 注册配置变化监听器
+    const configChangeListener = vscode.workspace.onDidChangeConfiguration(event => {
+        if (event.affectsConfiguration('vs-file-template.templatePath')) {
+            handleTemplatePathChanged();
+        }
+    });
+    context.subscriptions.push(configChangeListener);
+
     // 检查模板路径配置
     checkTemplateConfiguration();
 
@@ -53,5 +61,33 @@ function checkTemplateConfiguration(): void {
         return;
     }
 
+    // 确保必需的子目录存在
+    Configuration.ensureTemplateSubDirectories();
+
     console.log(`模板路径已配置: ${templatePath}`);
+}
+
+/**
+ * 处理模板路径配置变化
+ */
+function handleTemplatePathChanged(): void {
+    console.log('模板路径配置已变化，检查目录结构...');
+    
+    const templatePath = Configuration.getTemplatePath();
+    
+    if (!templatePath) {
+        UIUtils.showWarning('模板路径已清空');
+        return;
+    }
+
+    if (!Configuration.validateTemplatePath(templatePath)) {
+        UIUtils.showWarning('新配置的模板路径无效，请检查路径是否存在');
+        return;
+    }
+
+    // 检查并创建必需的子目录
+    const success = Configuration.ensureTemplateSubDirectories();
+    if (success) {
+        console.log(`模板路径已更新: ${templatePath}`);
+    }
 }

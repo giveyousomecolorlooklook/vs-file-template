@@ -1,6 +1,8 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
+import { FileSystemUtils } from '../utils/FileSystemUtils';
+import { UIUtils } from '../utils/UIUtils';
 
 /**
  * 配置管理类 - 负责管理插件的配置项
@@ -55,6 +57,48 @@ export class Configuration {
             insert: path.join(templatePath, 'insert'),
             new: path.join(templatePath, 'new')
         };
+    }
+
+    /**
+     * 检查并创建必需的模板子目录
+     */
+    public static ensureTemplateSubDirectories(): boolean {
+        const templatePath = this.getTemplatePath();
+        if (!templatePath) {
+            return false;
+        }
+
+        // 如果模板根目录不存在，先创建它
+        if (!this.validateTemplatePath(templatePath)) {
+            if (!FileSystemUtils.createDirectory(templatePath)) {
+                UIUtils.showError(`无法创建模板根目录: ${templatePath}`);
+                return false;
+            }
+        }
+
+        // 创建必需的子目录
+        const requiredDirs = ['import', 'insert', 'new'];
+        const createdDirs: string[] = [];
+        let allSuccess = true;
+
+        for (const dirName of requiredDirs) {
+            const dirPath = path.join(templatePath, dirName);
+            if (!FileSystemUtils.directoryExists(dirPath)) {
+                if (FileSystemUtils.createDirectory(dirPath)) {
+                    createdDirs.push(dirName);
+                } else {
+                    UIUtils.showError(`无法创建目录: ${dirPath}`);
+                    allSuccess = false;
+                }
+            }
+        }
+
+        // 显示创建结果
+        if (createdDirs.length > 0) {
+            UIUtils.showInfo(`已自动创建模板目录: ${createdDirs.join(', ')}`);
+        }
+
+        return allSuccess;
     }
 
     /**

@@ -31,6 +31,21 @@ export class FileSystemUtils {
     }
 
     /**
+     * 创建目录（如果不存在）
+     */
+    public static createDirectory(dirPath: string): boolean {
+        try {
+            if (!this.directoryExists(dirPath)) {
+                fs.mkdirSync(dirPath, { recursive: true });
+            }
+            return true;
+        } catch (error) {
+            console.error(`创建目录失败: ${dirPath}`, error);
+            return false;
+        }
+    }
+
+    /**
      * 读取目录下的所有子目录
      */
     public static getSubDirectories(dirPath: string): string[] {
