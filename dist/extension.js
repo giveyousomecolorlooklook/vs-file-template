@@ -565,35 +565,6 @@ class Configuration {
     static async openSettings() {
         await vscode.commands.executeCommand('workbench.action.openSettings', this.CONFIG_SECTION);
     }
-    /**
-     * 确保模板子目录存在，如果不存在则创建
-     */
-    static ensureTemplateDirectories() {
-        const templatePath = this.getTemplatePath();
-        if (!templatePath || !this.validateTemplatePath(templatePath)) {
-            return false;
-        }
-        const requiredDirs = ['import', 'insert', 'new'];
-        let created = false;
-        try {
-            for (const dirName of requiredDirs) {
-                const dirPath = path.join(templatePath, dirName);
-                if (!fs.existsSync(dirPath)) {
-                    fs.mkdirSync(dirPath, { recursive: true });
-                    console.log(`已创建模板子目录: ${dirPath}`);
-                    created = true;
-                }
-            }
-            if (created) {
-                console.log('模板目录结构初始化完成');
-            }
-            return true;
-        }
-        catch (error) {
-            console.error('创建模板子目录失败:', error);
-            return false;
-        }
-    }
 }
 exports.Configuration = Configuration;
 
@@ -1167,16 +1138,7 @@ function checkTemplateConfiguration() {
         UIUtils_1.UIUtils.showWarning('配置的模板路径无效，请检查路径是否存在');
         return;
     }
-    // 自动创建必要的子目录
-    const directoriesCreated = Configuration_1.Configuration.ensureTemplateDirectories();
-    if (directoriesCreated) {
-        console.log(`模板路径已配置: ${templatePath}`);
-        console.log('模板目录结构已检查并初始化');
-    }
-    else {
-        console.log(`模板路径已配置: ${templatePath}`);
-        UIUtils_1.UIUtils.showWarning('无法创建模板子目录，请检查路径权限');
-    }
+    console.log(`模板路径已配置: ${templatePath}`);
 }
 
 })();
