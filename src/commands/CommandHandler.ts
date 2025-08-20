@@ -35,8 +35,14 @@ export class CommandHandler {
             () => this.handleBtnCommand()
         );
 
+        // 注册添加到insert目录命令
+        const addToInsertCommand = vscode.commands.registerCommand(
+            'vs-file-template.addToInsertDir',
+            () => this.handleAddToInsertDirCommand()
+        );
+
         // 添加到订阅列表
-        context.subscriptions.push(insertCommand, importCommand, newCommand, btnCommand);
+        context.subscriptions.push(insertCommand, importCommand, newCommand, btnCommand, addToInsertCommand);
     }
 
     /**
@@ -92,6 +98,17 @@ export class CommandHandler {
             }
         } catch (error) {
             UIUtils.showError(`执行操作失败: ${error}`);
+        }
+    }
+
+    /**
+     * 处理添加到insert目录命令
+     */
+    private static async handleAddToInsertDirCommand(): Promise<void> {
+        try {
+            await TemplateService.addToInsertDir();
+        } catch (error) {
+            UIUtils.showError(`添加模板失败: ${error}`);
         }
     }
 }

@@ -32,12 +32,12 @@
     "commands": [
       {
         "command": "vs-file-template.insert",
-        "title": "插入模板",
+        "title": "从模板插入",
         "category": "文件模板"
       },
       {
         "command": "vs-file-template.import",
-        "title": "导入模板",
+        "title": "从模板导入",
         "category": "文件模板"
       },
       {
@@ -49,6 +49,11 @@
         "command": "vs-file-template.btn",
         "title": "文件模板管理",
         "category": "文件模板"
+      },
+      {
+        "command": "vs-file-template.addToInsertDir",
+        "title": "保存为模板",
+        "category": "文件模板"
       }
     ],
     "menus": {
@@ -57,6 +62,11 @@
           "command": "vs-file-template.insert",
           "group": "navigation@1",
           "when": "editorTextFocus"
+        },
+        {
+          "command": "vs-file-template.addToInsertDir",
+          "group": "navigation@2",
+          "when": "editorHasSelection"
         }
       ],
       "explorer/context": [

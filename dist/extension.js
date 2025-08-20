@@ -61,8 +61,10 @@ class CommandHandler {
         const newCommand = vscode.commands.registerCommand('vs-file-template.new', (uri) => this.handleNewCommand(uri));
         // 注册状态栏按钮命令
         const btnCommand = vscode.commands.registerCommand('vs-file-template.btn', () => this.handleBtnCommand());
+        // 注册添加到insert目录命令
+        const addToInsertCommand = vscode.commands.registerCommand('vs-file-template.addToInsertDir', () => this.handleAddToInsertDirCommand());
         // 添加到订阅列表
-        context.subscriptions.push(insertCommand, importCommand, newCommand, btnCommand);
+        context.subscriptions.push(insertCommand, importCommand, newCommand, btnCommand, addToInsertCommand);
     }
     /**
      * 处理插入模板命令
@@ -117,6 +119,17 @@ class CommandHandler {
         }
         catch (error) {
             UIUtils_1.UIUtils.showError(`执行操作失败: ${error}`);
+        }
+    }
+    /**
+     * 处理添加到insert目录命令
+     */
+    static async handleAddToInsertDirCommand() {
+        try {
+            await TemplateService_1.TemplateService.addToInsertDir();
+        }
+        catch (error) {
+            UIUtils_1.UIUtils.showError(`添加模板失败: ${error}`);
         }
     }
 }
@@ -198,13 +211,17 @@ class TemplateService {
             UIUtils_1.UIUtils.showError('没有打开的编辑器');
             return;
         }
+        // 获取当前文件的扩展名作为默认筛选器
+        const currentFileName = editor.document.fileName;
+        const fileExtension = path.extname(currentFileName);
+        const defaultFilter = fileExtension ? fileExtension.substring(1) : undefined; // 移除点号
         // 选择模板类型文件夹
         const subDirs = FileSystemUtils_1.FileSystemUtils.getSubDirectories(insertDir);
         if (subDirs.length === 0) {
             UIUtils_1.UIUtils.showError('insert目录下没有模板文件夹');
             return;
         }
-        const selectedDir = await UIUtils_1.UIUtils.showQuickPick(subDirs, '选择模板类型');
+        const selectedDir = await UIUtils_1.UIUtils.showQuickPickWithFilter(subDirs, defaultFilter, `选择模板类型${defaultFilter ? ` (当前文件: .${defaultFilter})` : ''}`);
         if (!selectedDir) {
             return;
         }
@@ -370,6 +387,76 @@ class TemplateService {
         const uri = vscode.Uri.file(templatePath);
         await vscode.commands.executeCommand('vscode.openFolder', uri, { forceNewWindow: true });
     }
+    /**
+     * 将当前选中的文本添加到insert模板目录
+     */
+    static async addToInsertDir() {
+        const templateDirs = Configuration_1.Configuration.getTemplateSubDirectories();
+        if (!templateDirs) {
+            UIUtils_1.UIUtils.showError('未配置模板路径或路径无效');
+            return;
+        }
+        const insertDir = templateDirs.insert;
+        if (!FileSystemUtils_1.FileSystemUtils.directoryExists(insertDir)) {
+            UIUtils_1.UIUtils.showError('insert目录不存在');
+            return;
+        }
+        // 获取当前活动编辑器
+        const editor = vscode.window.activeTextEditor;
+        if (!editor) {
+            UIUtils_1.UIUtils.showError('没有打开的编辑器');
+            return;
+        }
+        // 获取选中的文本
+        const selection = editor.selection;
+        if (selection.isEmpty) {
+            UIUtils_1.UIUtils.showError('请先选中要保存为模板的文本');
+            return;
+        }
+        const selectedText = editor.document.getText(selection);
+        if (!selectedText.trim()) {
+            UIUtils_1.UIUtils.showError('选中的文本不能为空');
+            return;
+        }
+        // 获取当前文件的扩展名作为默认目录
+        const currentFileName = editor.document.fileName;
+        const fileExtension = path.extname(currentFileName);
+        const defaultDir = fileExtension ? fileExtension.substring(1) : undefined; // 移除点号
+        // 获取insert目录下的所有子目录
+        const subDirs = FileSystemUtils_1.FileSystemUtils.getSubDirectories(insertDir);
+        if (subDirs.length === 0) {
+            UIUtils_1.UIUtils.showError('insert目录下没有子目录，请先创建相应的模板分类目录');
+            return;
+        }
+        // 选择目标子目录
+        const selectedSubDir = await UIUtils_1.UIUtils.showQuickPickWithFilter(subDirs, defaultDir, `选择模板分类目录${defaultDir ? ` (当前文件: .${defaultDir})` : ''}`);
+        if (!selectedSubDir) {
+            return;
+        }
+        // 输入文件名
+        const fileName = await UIUtils_1.UIUtils.showInputBox('请输入模板文件名（不含扩展名）', '输入模板文件名');
+        if (!fileName) {
+            return;
+        }
+        // 确定文件扩展名（使用当前文件的扩展名）
+        const templateFileName = fileName + (fileExtension || '.txt');
+        const templateFilePath = path.join(insertDir, selectedSubDir, templateFileName);
+        // 检查文件是否已存在
+        if (FileSystemUtils_1.FileSystemUtils.fileExists(templateFilePath)) {
+            const overwrite = await UIUtils_1.UIUtils.showConfirmDialog(`模板文件 ${templateFileName} 已存在，是否覆盖？`);
+            if (!overwrite) {
+                return;
+            }
+        }
+        // 保存选中的文本到模板文件
+        const success = FileSystemUtils_1.FileSystemUtils.writeFileContent(templateFilePath, selectedText);
+        if (success) {
+            UIUtils_1.UIUtils.showInfo(`已成功保存模板: ${selectedSubDir}/${templateFileName}`);
+        }
+        else {
+            UIUtils_1.UIUtils.showError('保存模板文件失败');
+        }
+    }
 }
 exports.TemplateService = TemplateService;
 
@@ -477,6 +564,35 @@ class Configuration {
      */
     static async openSettings() {
         await vscode.commands.executeCommand('workbench.action.openSettings', this.CONFIG_SECTION);
+    }
+    /**
+     * 确保模板子目录存在，如果不存在则创建
+     */
+    static ensureTemplateDirectories() {
+        const templatePath = this.getTemplatePath();
+        if (!templatePath || !this.validateTemplatePath(templatePath)) {
+            return false;
+        }
+        const requiredDirs = ['import', 'insert', 'new'];
+        let created = false;
+        try {
+            for (const dirName of requiredDirs) {
+                const dirPath = path.join(templatePath, dirName);
+                if (!fs.existsSync(dirPath)) {
+                    fs.mkdirSync(dirPath, { recursive: true });
+                    console.log(`已创建模板子目录: ${dirPath}`);
+                    created = true;
+                }
+            }
+            if (created) {
+                console.log('模板目录结构初始化完成');
+            }
+            return true;
+        }
+        catch (error) {
+            console.error('创建模板子目录失败:', error);
+            return false;
+        }
     }
 }
 exports.Configuration = Configuration;
@@ -815,6 +931,41 @@ class UIUtils {
         });
     }
     /**
+     * 显示带有默认筛选值的选择列表
+     * 使用createQuickPick API来实现默认输入值
+     */
+    static async showQuickPickWithFilter(items, defaultFilter, placeholder) {
+        if (items.length === 0) {
+            this.showWarning('没有可选项');
+            return undefined;
+        }
+        return new Promise((resolve) => {
+            const quickPick = vscode.window.createQuickPick();
+            // 转换为QuickPickItem格式
+            const quickPickItems = items.map(item => ({
+                label: item,
+                description: ''
+            }));
+            quickPick.items = quickPickItems;
+            quickPick.placeholder = placeholder || '请选择一个选项';
+            // 设置默认筛选值
+            if (defaultFilter) {
+                quickPick.value = defaultFilter;
+            }
+            quickPick.onDidChangeSelection(selection => {
+                if (selection[0]) {
+                    resolve(selection[0].label);
+                    quickPick.hide();
+                }
+            });
+            quickPick.onDidHide(() => {
+                resolve(undefined);
+                quickPick.dispose();
+            });
+            quickPick.show();
+        });
+    }
+    /**
      * 显示输入框
      */
     static async showInputBox(placeholder, prompt) {
@@ -1016,7 +1167,16 @@ function checkTemplateConfiguration() {
         UIUtils_1.UIUtils.showWarning('配置的模板路径无效，请检查路径是否存在');
         return;
     }
-    console.log(`模板路径已配置: ${templatePath}`);
+    // 自动创建必要的子目录
+    const directoriesCreated = Configuration_1.Configuration.ensureTemplateDirectories();
+    if (directoriesCreated) {
+        console.log(`模板路径已配置: ${templatePath}`);
+        console.log('模板目录结构已检查并初始化');
+    }
+    else {
+        console.log(`模板路径已配置: ${templatePath}`);
+        UIUtils_1.UIUtils.showWarning('无法创建模板子目录，请检查路径权限');
+    }
 }
 
 })();

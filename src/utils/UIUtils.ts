@@ -40,6 +40,49 @@ export class UIUtils {
     }
 
     /**
+     * 显示带有默认筛选值的选择列表
+     * 使用createQuickPick API来实现默认输入值
+     */
+    public static async showQuickPickWithFilter(items: string[], defaultFilter?: string, placeholder?: string): Promise<string | undefined> {
+        if (items.length === 0) {
+            this.showWarning('没有可选项');
+            return undefined;
+        }
+
+        return new Promise<string | undefined>((resolve) => {
+            const quickPick = vscode.window.createQuickPick();
+            
+            // 转换为QuickPickItem格式
+            const quickPickItems: vscode.QuickPickItem[] = items.map(item => ({
+                label: item,
+                description: ''
+            }));
+            
+            quickPick.items = quickPickItems;
+            quickPick.placeholder = placeholder || '请选择一个选项';
+            
+            // 设置默认筛选值
+            if (defaultFilter) {
+                quickPick.value = defaultFilter;
+            }
+            
+            quickPick.onDidChangeSelection(selection => {
+                if (selection[0]) {
+                    resolve(selection[0].label);
+                    quickPick.hide();
+                }
+            });
+            
+            quickPick.onDidHide(() => {
+                resolve(undefined);
+                quickPick.dispose();
+            });
+            
+            quickPick.show();
+        });
+    }
+
+    /**
      * 显示输入框
      */
     public static async showInputBox(placeholder?: string, prompt?: string): Promise<string | undefined> {
