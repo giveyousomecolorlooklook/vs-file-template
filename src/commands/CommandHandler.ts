@@ -41,8 +41,14 @@ export class CommandHandler {
             () => this.handleAddToInsertDirCommand()
         );
 
+        // 注册切换CodeLens命令
+        const toggleCodeLensCommand = vscode.commands.registerCommand(
+            'vs-file-template.toggleCodeLens',
+            () => this.handleToggleCodeLensCommand()
+        );
+
         // 添加到订阅列表
-        context.subscriptions.push(insertCommand, importCommand, newCommand, btnCommand, addToInsertCommand);
+        context.subscriptions.push(insertCommand, importCommand, newCommand, btnCommand, addToInsertCommand, toggleCodeLensCommand);
     }
 
     /**
@@ -95,6 +101,10 @@ export class CommandHandler {
                 case '管理模板':
                     await TemplateService.manageTemplates();
                     break;
+                case '启用代码镜头':
+                case '禁用代码镜头':
+                    await this.handleToggleCodeLensCommand();
+                    break;
             }
         } catch (error) {
             UIUtils.showError(`执行操作失败: ${error}`);
@@ -109,6 +119,21 @@ export class CommandHandler {
             await TemplateService.addToInsertDir();
         } catch (error) {
             UIUtils.showError(`添加模板失败: ${error}`);
+        }
+    }
+
+    /**
+     * 处理切换CodeLens命令
+     */
+    private static async handleToggleCodeLensCommand(): Promise<void> {
+        try {
+            const newState = await Configuration.toggleCodeLens();
+            UIUtils.showInfo(`代码镜头已${newState ? '启用' : '禁用'}`);
+            
+            // 触发CodeLens刷新
+            vscode.commands.executeCommand('vscode.executeCodeLensProvider');
+        } catch (error) {
+            UIUtils.showError(`切换代码镜头状态失败: ${error}`);
         }
     }
 }

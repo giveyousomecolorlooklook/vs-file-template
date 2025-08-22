@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { Configuration } from '../config/Configuration';
 
 /**
  * CodeLens提供器 - 在代码编辑器中显示模板相关的快捷操作
@@ -14,6 +15,11 @@ export class TemplateCodeLensProvider implements vscode.CodeLensProvider {
         token: vscode.CancellationToken
     ): vscode.CodeLens[] | Thenable<vscode.CodeLens[]> {
         const codeLenses: vscode.CodeLens[] = [];
+
+        // 检查CodeLens是否启用
+        if (!Configuration.getCodeLensEnabled()) {
+            return codeLenses;
+        }
 
         // 只在文本文件中显示CodeLens
         if (document.uri.scheme !== 'file') {

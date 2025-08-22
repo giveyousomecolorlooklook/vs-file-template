@@ -54,6 +54,9 @@ export function activate(context: vscode.ExtensionContext) {
         if (event.affectsConfiguration('vs-file-template.templatePath')) {
             handleTemplatePathChanged();
         }
+        if (event.affectsConfiguration('vs-file-template.enableCodeLens')) {
+            handleCodeLensConfigChanged();
+        }
     });
     context.subscriptions.push(configChangeListener);
 
@@ -120,5 +123,15 @@ function handleTemplatePathChanged(): void {
     const success = Configuration.ensureTemplateSubDirectories();
     if (success) {
         console.log(`模板路径已更新: ${templatePath}`);
+    }
+}
+
+/**
+ * 处理CodeLens配置变化
+ */
+function handleCodeLensConfigChanged(): void {
+    console.log('CodeLens配置已变化，刷新CodeLens...');
+    if (codeLensProvider) {
+        codeLensProvider.refresh();
     }
 }

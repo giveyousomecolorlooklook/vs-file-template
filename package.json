@@ -7,8 +7,8 @@
   },
   "name": "vs-file-template",
   "displayName": "vs-file-template",
-  "description": "",
-  "version": "0.0.1",
+  "description": "一个用于管理和使用文件模板的 VS Code 插件，支持模板插入、导入、新建文件和CodeLens等功能",
+  "version": "0.1.0",
   "license": "MIT",
   "engines": {
     "vscode": "^1.103.0"
@@ -28,6 +28,11 @@
           "type": "string",
           "default": "",
           "description": "模板文件存放路径"
+        },
+        "vs-file-template.enableCodeLens": {
+          "type": "boolean",
+          "default": true,
+          "description": "是否启用代码镜头（CodeLens）功能"
         }
       }
     },
@@ -61,6 +66,11 @@
       {
         "command": "vs-file-template.addToInsertDir",
         "title": "保存为模板",
+        "category": "文件模板"
+      },
+      {
+        "command": "vs-file-template.toggleCodeLens",
+        "title": "切换代码镜头显示",
         "category": "文件模板"
       }
     ],

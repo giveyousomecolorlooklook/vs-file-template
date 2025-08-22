@@ -5,6 +5,31 @@
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/)，
 并且本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/spec/v2.0.0.html)。
 
+## [0.1.0] - 2025-08-23
+
+### 新增
+- **CodeLens功能**: 在编辑器中显示模板操作的代码镜头
+  - 🔧 从模板插入 - 在光标所在行始终显示
+  - 💾 保存选中内容为模板 - 仅在有文本选中时显示
+- **CodeLens配置管理**:
+  - 新增 `vs-file-template.enableCodeLens` 配置项控制CodeLens显示
+  - 新增 `vs-file-template.toggleCodeLens` 命令用于切换CodeLens状态
+  - 在状态栏按钮菜单中添加启用/禁用CodeLens选项
+- **智能缩进功能**: 插入多行模板时自动应用与光标位置相同的缩进
+  - 第一行保持原样，其他行自动添加与光标位置相同的缩进
+  - 支持任意缩进格式（空格、制表符等）
+
+### 改进
+- 优化了CodeLens的实时刷新机制
+- 改进了配置变化的监听和响应
+- 增强了用户交互体验
+
+### 技术特性
+- 实现了 `TemplateCodeLensProvider` 类提供CodeLens功能
+- 添加了配置变化监听器自动刷新CodeLens
+- 扩展了 `Configuration` 类支持CodeLens相关配置
+- 完善了命令处理系统
+
 ## [0.0.1] - 2025-08-20
 
 ### 新增

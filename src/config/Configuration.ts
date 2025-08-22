@@ -10,6 +10,7 @@ import { UIUtils } from '../utils/UIUtils';
 export class Configuration {
     private static readonly CONFIG_SECTION = 'vs-file-template';
     private static readonly TEMPLATE_PATH_KEY = 'templatePath';
+    private static readonly ENABLE_CODELENS_KEY = 'enableCodeLens';
 
     /**
      * 获取模板路径配置
@@ -106,5 +107,31 @@ export class Configuration {
      */
     public static async openSettings(): Promise<void> {
         await vscode.commands.executeCommand('workbench.action.openSettings', this.CONFIG_SECTION);
+    }
+
+    /**
+     * 获取CodeLens启用状态
+     */
+    public static getCodeLensEnabled(): boolean {
+        const config = vscode.workspace.getConfiguration(this.CONFIG_SECTION);
+        return config.get<boolean>(this.ENABLE_CODELENS_KEY, true);
+    }
+
+    /**
+     * 设置CodeLens启用状态
+     */
+    public static async setCodeLensEnabled(enabled: boolean): Promise<void> {
+        const config = vscode.workspace.getConfiguration(this.CONFIG_SECTION);
+        await config.update(this.ENABLE_CODELENS_KEY, enabled, vscode.ConfigurationTarget.Global);
+    }
+
+    /**
+     * 切换CodeLens启用状态
+     */
+    public static async toggleCodeLens(): Promise<boolean> {
+        const currentState = this.getCodeLensEnabled();
+        const newState = !currentState;
+        await this.setCodeLensEnabled(newState);
+        return newState;
     }
 }

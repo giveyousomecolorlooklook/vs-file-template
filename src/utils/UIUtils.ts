@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { Configuration } from '../config/Configuration';
 
 /**
  * UI工具类 - 处理用户界面交互
@@ -124,9 +125,13 @@ export class UIUtils {
      * 显示操作选择菜单
      */
     public static async showActionMenu(): Promise<string | undefined> {
+        const codeLensEnabled = Configuration.getCodeLensEnabled();
+        const codeLensStatus = codeLensEnabled ? '禁用代码镜头' : '启用代码镜头';
+        
         const actions = [
             '配置模板路径',
-            '管理模板'
+            '管理模板',
+            codeLensStatus
         ];
 
         return await this.showQuickPick(actions, '选择操作');
