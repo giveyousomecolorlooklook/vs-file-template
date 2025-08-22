@@ -46,7 +46,9 @@ const CommandHandler_1 = __webpack_require__(2);
 const StatusBarManager_1 = __webpack_require__(9);
 const Configuration_1 = __webpack_require__(5);
 const UIUtils_1 = __webpack_require__(8);
+const CodeLensProvider_1 = __webpack_require__(10);
 let statusBarManager;
+let codeLensProvider;
 /**
  * 扩展激活时调用
  */
@@ -54,6 +56,26 @@ function activate(context) {
     console.log('文件模板插件已激活');
     // 注册所有命令
     CommandHandler_1.CommandHandler.registerCommands(context);
+    // 创建并注册CodeLens提供器
+    codeLensProvider = new CodeLensProvider_1.TemplateCodeLensProvider();
+    const codeLensDisposable = vscode.languages.registerCodeLensProvider({ scheme: 'file' }, // 支持所有文件类型
+    codeLensProvider);
+    context.subscriptions.push(codeLensDisposable);
+    // 监听文本选择变化以刷新CodeLens
+    const selectionChangeListener = vscode.window.onDidChangeTextEditorSelection(() => {
+        codeLensProvider.refresh();
+    });
+    context.subscriptions.push(selectionChangeListener);
+    // 监听活动编辑器变化以刷新CodeLens
+    const activeEditorChangeListener = vscode.window.onDidChangeActiveTextEditor(() => {
+        codeLensProvider.refresh();
+    });
+    context.subscriptions.push(activeEditorChangeListener);
+    // 监听光标位置变化以刷新CodeLens
+    const cursorChangeListener = vscode.window.onDidChangeTextEditorSelection(() => {
+        codeLensProvider.refresh();
+    });
+    context.subscriptions.push(cursorChangeListener);
     // 创建状态栏管理器
     statusBarManager = new StatusBarManager_1.StatusBarManager();
     context.subscriptions.push({
@@ -76,6 +98,9 @@ function activate(context) {
 function deactivate() {
     if (statusBarManager) {
         statusBarManager.dispose();
+    }
+    if (codeLensProvider) {
+        // CodeLens提供器会通过context.subscriptions自动清理
     }
     console.log('文件模板插件已停用');
 }
@@ -1249,6 +1274,99 @@ class StatusBarManager {
     }
 }
 exports.StatusBarManager = StatusBarManager;
+
+
+/***/ }),
+/* 10 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.TemplateCodeLensProvider = void 0;
+const vscode = __importStar(__webpack_require__(1));
+/**
+ * CodeLens提供器 - 在代码编辑器中显示模板相关的快捷操作
+ */
+class TemplateCodeLensProvider {
+    _onDidChangeCodeLenses = new vscode.EventEmitter();
+    onDidChangeCodeLenses = this._onDidChangeCodeLenses.event;
+    constructor() { }
+    provideCodeLenses(document, token) {
+        const codeLenses = [];
+        // 只在文本文件中显示CodeLens
+        if (document.uri.scheme !== 'file') {
+            return codeLenses;
+        }
+        // 获取当前编辑器
+        const editor = vscode.window.activeTextEditor;
+        if (!editor || editor.document !== document) {
+            return codeLenses;
+        }
+        // 在光标所在行显示CodeLens
+        const cursorLine = editor.selection.active.line;
+        const cursorPosition = new vscode.Range(cursorLine, 0, cursorLine, 0);
+        // "从模板插入" CodeLens - 始终显示
+        const insertCodeLens = new vscode.CodeLens(cursorPosition, {
+            title: "🔧 从模板插入",
+            command: "vs-file-template.insert",
+            tooltip: "在当前位置插入模板内容"
+        });
+        codeLenses.push(insertCodeLens);
+        // "保存为模板" CodeLens - 只在有选中内容时显示
+        if (!editor.selection.isEmpty) {
+            const addToTemplateCodeLens = new vscode.CodeLens(cursorPosition, {
+                title: "💾 保存选中内容为模板",
+                command: "vs-file-template.addToInsertDir",
+                tooltip: "将选中的内容保存为模板"
+            });
+            codeLenses.push(addToTemplateCodeLens);
+        }
+        return codeLenses;
+    }
+    resolveCodeLens(codeLens, token) {
+        return codeLens;
+    }
+    /**
+     * 刷新CodeLens
+     */
+    refresh() {
+        this._onDidChangeCodeLenses.fire();
+    }
+}
+exports.TemplateCodeLensProvider = TemplateCodeLensProvider;
 
 
 /***/ })

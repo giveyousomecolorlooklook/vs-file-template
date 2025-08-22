@@ -31,6 +31,12 @@
         }
       }
     },
+    "codeLens": [
+      {
+        "language": "*",
+        "scheme": "file"
+      }
+    ],
     "commands": [
       {
         "command": "vs-file-template.insert",
@@ -67,7 +73,7 @@
         },
         {
           "command": "vs-file-template.addToInsertDir",
-          "group": "navigation@2",
+          "group": "navigation@1",
           "when": "editorHasSelection"
         }
       ],

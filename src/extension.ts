@@ -3,8 +3,10 @@ import { CommandHandler } from './commands/CommandHandler';
 import { StatusBarManager } from './ui/StatusBarManager';
 import { Configuration } from './config/Configuration';
 import { UIUtils } from './utils/UIUtils';
+import { TemplateCodeLensProvider } from './providers/CodeLensProvider';
 
 let statusBarManager: StatusBarManager;
+let codeLensProvider: TemplateCodeLensProvider;
 
 /**
  * 扩展激活时调用
@@ -14,6 +16,32 @@ export function activate(context: vscode.ExtensionContext) {
 
     // 注册所有命令
     CommandHandler.registerCommands(context);
+
+    // 创建并注册CodeLens提供器
+    codeLensProvider = new TemplateCodeLensProvider();
+    const codeLensDisposable = vscode.languages.registerCodeLensProvider(
+        { scheme: 'file' }, // 支持所有文件类型
+        codeLensProvider
+    );
+    context.subscriptions.push(codeLensDisposable);
+
+    // 监听文本选择变化以刷新CodeLens
+    const selectionChangeListener = vscode.window.onDidChangeTextEditorSelection(() => {
+        codeLensProvider.refresh();
+    });
+    context.subscriptions.push(selectionChangeListener);
+
+    // 监听活动编辑器变化以刷新CodeLens
+    const activeEditorChangeListener = vscode.window.onDidChangeActiveTextEditor(() => {
+        codeLensProvider.refresh();
+    });
+    context.subscriptions.push(activeEditorChangeListener);
+
+    // 监听光标位置变化以刷新CodeLens
+    const cursorChangeListener = vscode.window.onDidChangeTextEditorSelection(() => {
+        codeLensProvider.refresh();
+    });
+    context.subscriptions.push(cursorChangeListener);
 
     // 创建状态栏管理器
     statusBarManager = new StatusBarManager();
@@ -41,6 +69,9 @@ export function activate(context: vscode.ExtensionContext) {
 export function deactivate() {
     if (statusBarManager) {
         statusBarManager.dispose();
+    }
+    if (codeLensProvider) {
+        // CodeLens提供器会通过context.subscriptions自动清理
     }
     console.log('文件模板插件已停用');
 }
