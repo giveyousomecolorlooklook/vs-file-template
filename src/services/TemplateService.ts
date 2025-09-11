@@ -75,29 +75,23 @@ export class TemplateService {
 
         // 在光标位置插入内容，支持多行缩进
         await editor.edit(editBuilder => {
-            // 获取光标所在行的缩进
-            const currentLine = editor.document.lineAt(editor.selection.active.line);
-            const lineText = currentLine.text;
             const cursorColumn = editor.selection.active.character;
-            
-            // 获取光标前的内容作为缩进基准
-            const indentText = lineText.substring(0, cursorColumn);
-            
-            // 如果内容包含换行符，需要为除第一行外的所有行添加缩进
+            // 用空格补齐到光标同列
+            const indentText = ' '.repeat(cursorColumn);
+        
             let formattedContent = content;
             if (content.includes('\n')) {
                 const lines = content.split('\n');
                 formattedContent = lines.map((line, index) => {
-                    // 第一行不需要添加缩进，其他行都要添加
                     if (index === 0) {
                         return line;
                     } else {
-                        // 为非第一行添加与光标位置相同的缩进
+                        // 只加空白，不复制光标左侧已有内容
                         return indentText + line;
                     }
                 }).join('\n');
             }
-            
+        
             editBuilder.insert(editor.selection.active, formattedContent);
         });
 

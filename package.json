@@ -8,7 +8,7 @@
   "name": "vs-file-template",
   "displayName": "vs-file-template",
   "description": "一个用于管理和使用文件模板的 VS Code 插件，支持模板插入、导入、新建文件和CodeLens等功能",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "license": "MIT",
   "engines": {
     "vscode": "^1.103.0"
